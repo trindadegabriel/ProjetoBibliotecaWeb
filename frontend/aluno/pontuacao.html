@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Minha Pontuação - Biblioteca</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+  <header>
+    <h1>Biblioteca Universitária</h1>
+    <h2>Minha Pontuação</h2>
+  </header>
+  <nav>
+    <a href="index.html">Início</a>
+    <a href="cadastro.html">Cadastro</a>
+    <a href="livros.html">Consultar Livros</a>
+  </nav>
+  <main>
+    <div class="container">
+      <h3>Consultar Pontuação</h3>
+      <form id="formPontuacao">
+        <label for="idAluno">ID do Aluno:</label><br>
+        <input type="number" id="idAluno" name="idAluno" required><br><br>
+        <button type="submit">Consultar</button>
+      </form>
+      <p id="resultado" class="pontuacao"></p>
+    </div>
+  </main>
+  <script>
+    const form = document.getElementById('formPontuacao');
+    const resultado = document.getElementById('resultado');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('idAluno').value;
+      resultado.style.color = 'black';
+      resultado.innerHTML = '<div>Carregando...</div>';
+
+      try {
+        const res = await fetch(`http://localhost:3000/alunos/${id}/pontuacao`);
+        const dados = await res.json();
+
+        if (res.ok) {
+          resultado.innerHTML = `
+        <div><strong>Pontuação:</strong> ${dados.pontos}</div>
+        <div><strong>Classificação:</strong> ${dados.classificacao}</div>
+      `;
+        } else {
+          resultado.innerHTML = `<div style="color:red;">${dados.error || 'Aluno não encontrado.'}</div>`;
+        }
+      } catch (err) {
+        resultado.innerHTML = `<div style="color:red;">Erro de conexão com o servidor.</div>`;
+        console.error(err);
+      }
+    });
+
+  </script>
+</body>
+
+</html>

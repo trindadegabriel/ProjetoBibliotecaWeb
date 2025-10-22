@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Cadastro de Livros - Bibliotecário</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Biblioteca Universitária</h1>
+    <h2>Cadastrar Livros</h2>
+  </header>
+  <nav>
+    <a href="index.html">Início</a>
+    <a href="gerenciamento.html">Gerenciar Livros</a>
+    <a href="relatorios.html">Ranking</a>
+  </nav>
+  <main>
+    <div class="container">
+      <form id="formLivro">
+        <label for="titulo">Título:</label><br>
+        <input type="text" id="titulo" name="titulo" required><br><br>
+
+        <label for="autor">Autor:</label><br>
+        <input type="text" id="autor" name="autor"><br><br>
+
+        <button type="submit">Cadastrar Livro</button>
+      </form>
+      <p id="mensagem"></p>
+    </div>
+  </main>
+  <script>
+    const form = document.getElementById('formLivro');
+    const mensagem = document.getElementById('mensagem');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const titulo = document.getElementById('titulo').value;
+      const autor = document.getElementById('autor').value;
+      mensagem.textContent = 'Enviando...';
+      mensagem.style.color = 'black';
+
+      try {
+        const res = await fetch('http://localhost:3000/livros', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({titulo, autor})
+        });
+
+        const data = await res.json();
+
+        if(res.ok){
+          mensagem.style.color = 'green';
+          mensagem.textContent = data.message || 'Livro cadastrado com sucesso!';
+          form.reset();
+        } else {
+          mensagem.style.color = 'red';
+          mensagem.textContent = data.error || data.message || 'Erro ao cadastrar livro.';
+        }
+      } catch(err) {
+        mensagem.style.color = 'red';
+        mensagem.textContent = 'Erro de conexão com o servidor.';
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>

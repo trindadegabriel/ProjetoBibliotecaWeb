@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Retirada de Livro - Totem</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Biblioteca Universitária</h1>
+    <h2>Registrar Retirada</h2>
+  </header>
+  <nav>
+    <a href="index.html">Início</a>
+    <a href="devolucao.html">Registrar Devolução</a>
+  </nav>
+  <main>
+    <div class="container">
+      <form id="formRetirada">
+        <label for="aluno_id">ID do Aluno:</label><br>
+        <input type="number" id="aluno_id" name="aluno_id" required><br><br>
+
+        <label for="livro_id">ID do Livro:</label><br>
+        <input type="number" id="livro_id" name="livro_id" required><br><br>
+
+        <button type="submit">Registrar Retirada</button>
+      </form>
+      <p id="mensagem"></p>
+    </div>
+  </main>
+  <script>
+    const form = document.getElementById('formRetirada');
+    const mensagem = document.getElementById('mensagem');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const aluno_id = document.getElementById('aluno_id').value;
+      const livro_id = document.getElementById('livro_id').value;
+
+      mensagem.textContent = 'Registrando...';
+      mensagem.style.color = 'black';
+
+      try {
+        const res = await fetch('http://localhost:3000/emprestimos', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({aluno_id, livro_id})
+        });
+
+        const data = await res.json();
+
+        if(res.ok){
+          mensagem.style.color = 'green';
+          mensagem.textContent = data.message || 'Retirada registrada com sucesso!';
+          form.reset();
+        } else {
+          mensagem.style.color = 'red';
+          mensagem.textContent = data.error || 'Erro ao registrar retirada.';
+        }
+      } catch(err) {
+        mensagem.style.color = 'red';
+        mensagem.textContent = 'Erro de conexão com o servidor.';
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>

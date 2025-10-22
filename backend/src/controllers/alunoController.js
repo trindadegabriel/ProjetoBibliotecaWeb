@@ -1,54 +1,36 @@
-const { getConnection } = require("../config/db");
+const db = require("../config/db");
 
-async function cadastrarAluno(req, res) {
+function cadastrarAluno(req, res) {
   const { nome, matricula } = req.body;
-  try {
-    const conn = await getConnection();
-    await conn.execute(
-      `INSERT INTO alunos (nome, matricula, data_cadastro)
-       VALUES (:nome, :matricula, SYSDATE)`,
-      [nome, matricula],
-      { autoCommit: true }
-    );
-    await conn.close();
-    res.status(201).json({ message: "Aluno cadastrado com sucesso!" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  const sql = "INSERT INTO alunos (nome, matricula) VALUES (?, ?)";
+  db.run(sql, [nome, matricula], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.status(201).json({ message: "Aluno cadastrado!", id: this.lastID });
+  });
 }
 
-async function listarAlunos(req, res) {
-  try {
-    const conn = await getConnection();
-    const result = await conn.execute("SELECT * FROM alunos");
-    await conn.close();
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+function listarAlunos(req, res) {
+  db.all("SELECT * FROM alunos", [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
 }
 
-async function getPontuacao(req, res) {
+function getPontuacao(req, res) {
   const { id } = req.params;
-  try {
-    const conn = await getConnection();
-    const result = await conn.execute(
-      `SELECT COUNT(*) AS livros_lidos FROM emprestimos
-       WHERE aluno_id = :id AND data_retirada >= ADD_MONTHS(SYSDATE, -6)`,
-      [id]
-    );
-    await conn.close();
+  db.get("SELECT pontos FROM alunos WHERE id = ?", [id], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ message: "Aluno não encontrado" });
 
-    const livrosLidos = result.rows[0][0];
     let classificacao = "Iniciante";
-    if (livrosLidos >= 6 && livrosLidos <= 10) classificacao = "Regular";
-    else if (livrosLidos >= 11 && livrosLidos <= 20) classificacao = "Ativo";
-    else if (livrosLidos > 20) classificacao = "Extremo";
+    const pontos = row.pontos || 0;
+    if (pontos >= 6 && pontos <= 10) classificacao = "Regular";
+    else if (pontos >= 11 && pontos <= 20) classificacao = "Ativo";
+    else if (pontos > 20) classificacao = "Extremo";
 
-    res.json({ id, livrosLidos, classificacao });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+    res.json({ id, pontos, classificacao });
+  });
 }
+
 
 module.exports = { cadastrarAluno, listarAlunos, getPontuacao };

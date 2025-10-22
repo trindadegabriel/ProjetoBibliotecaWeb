@@ -1,33 +1,19 @@
-const { getConnection } = require("../config/db");
+const db = require("../config/db");
 
-async function cadastrarLivro(req, res) {
+function cadastrarLivro(req, res) {
   const { titulo, autor } = req.body;
-  try {
-    const conn = await getConnection();
-    await conn.execute(
-      `INSERT INTO livros (titulo, autor, disponivel)
-       VALUES (:titulo, :autor, 'S')`,
-      [titulo, autor],
-      { autoCommit: true }
-    );
-    await conn.close();
-    res.status(201).json({ message: "Livro cadastrado com sucesso!" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  const sql = "INSERT INTO livros (titulo, autor, disponivel) VALUES (?, ?, 'S')";
+  db.run(sql, [titulo, autor], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.status(201).json({ message: "Livro cadastrado!", id: this.lastID });
+  });
 }
 
-async function listarDisponiveis(req, res) {
-  try {
-    const conn = await getConnection();
-    const result = await conn.execute(
-      "SELECT id, titulo, autor FROM livros WHERE disponivel = 'S'"
-    );
-    await conn.close();
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+function listarDisponiveis(req, res) {
+  db.all("SELECT * FROM livros WHERE disponivel = 'S'", [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
 }
 
 module.exports = { cadastrarLivro, listarDisponiveis };

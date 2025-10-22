@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Gerenciar Livros - Bibliotecário</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Biblioteca Universitária</h1>
+    <h2>Gerenciar Livros</h2>
+  </header>
+
+  <nav>
+    <a href="index.html">Início</a>
+    <a href="cadastro.html">Cadastrar Livros</a>
+    <a href="relatorios.html">Ranking</a>
+  </nav>
+
+  <main>
+    <div class="container">
+      <h3>Livros Cadastrados</h3>
+
+      <div class="grid-livros-disponiveis">
+        <div class="grid-header">ID</div>
+        <div class="grid-header">Título</div>
+        <div class="grid-header">Autor</div>
+        <div class="grid-header">Status</div>
+        <div id="listaLivros" class="grid-body"></div>
+      </div>
+    </div>
+  </main>
+
+<script>
+    async function carregarLivros() {
+        try {
+            const res = await fetch('http://localhost:3000/livros/disponiveis');
+            if (!res.ok) throw new Error('Erro ao carregar livros');
+
+            const livros = await res.json();
+            const lista = document.getElementById('listaLivros');
+            lista.innerHTML = '';
+
+            livros.forEach(livro => {
+                const id = document.createElement('div');
+                id.textContent = livro.id;
+
+                const titulo = document.createElement('div');
+                titulo.textContent = livro.titulo;
+
+                const autor = document.createElement('div');
+                autor.textContent = livro.autor || 'Autor não informado';
+
+                const status = document.createElement('div');
+                status.textContent = livro.disponivel === 'S' || livro.disponivel === true
+                    ? 'Disponível'
+                    : 'Emprestado';
+
+                lista.appendChild(id);
+                lista.appendChild(titulo);
+                lista.appendChild(autor);
+                lista.appendChild(status);
+            });
+        } catch (err) {
+            alert(err.message);
+        }
+    }
+
+    carregarLivros();
+</script>
+</body>
+</html>

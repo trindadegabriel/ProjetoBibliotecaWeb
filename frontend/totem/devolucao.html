@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Devolução de Livro - Totem</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Biblioteca Universitária</h1>
+    <h2>Registrar Devolução</h2>
+  </header>
+  <nav>
+    <a href="index.html">Início</a>
+    <a href="retirada.html">Registrar Retirada</a>
+  </nav>
+  <main>
+    <div class="container">
+      <form id="formDevolucao">
+        <label for="emprestimo_id">ID do Empréstimo:</label><br>
+        <input type="number" id="emprestimo_id" name="emprestimo_id" required><br><br>
+
+        <button type="submit">Registrar Devolução</button>
+      </form>
+      <p id="mensagem"></p>
+    </div>
+  </main>
+  <script>
+    const form = document.getElementById('formDevolucao');
+    const mensagem = document.getElementById('mensagem');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('emprestimo_id').value;
+      mensagem.textContent = 'Registrando...';
+      mensagem.style.color = 'black';
+
+      try {
+        const res = await fetch(`http://localhost:3000/emprestimos/${id}/devolucao`, {
+          method: 'PUT'
+        });
+
+        const data = await res.json();
+
+        if(res.ok){
+          mensagem.style.color = 'green';
+          mensagem.textContent = data.message || 'Devolução registrada com sucesso!';
+          form.reset();
+        } else {
+          mensagem.style.color = 'red';
+          mensagem.textContent = data.error || 'Erro ao registrar devolução.';
+        }
+      } catch(err) {
+        mensagem.style.color = 'red';
+        mensagem.textContent = 'Erro de conexão com o servidor.';
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>

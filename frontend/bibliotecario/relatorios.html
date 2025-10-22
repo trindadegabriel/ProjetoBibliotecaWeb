@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Relatórios - Bibliotecário</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Biblioteca Universitária</h1>
+    <h2>Relatórios de Leitores</h2>
+  </header>
+  <nav>
+    <a href="index.html">Início</a>
+    <a href="cadastro.html">Cadastrar Livros</a>
+    <a href="gerenciamento.html">Gerenciar Livros</a>
+  </nav>
+  <main>
+    <div class="container">
+      <h3>Ranking de Leitores</h3>
+      <div class="grid-ranking">
+        <div class="grid-header">Nome</div>
+        <div class="grid-header">Pontos</div>
+        <div class="grid-header">Classificação</div>
+        <div id="ranking" class="grid-body"></div>
+        </div>
+  </div>
+      <p id="mensagem"></p>
+    </div>
+  </main>
+  <script>
+    const ranking = document.getElementById('ranking');
+    const mensagem = document.getElementById('mensagem');
+
+        async function carregarRanking() {
+            try {
+                const res = await fetch('http://localhost:3000/relatorios/classificacao');
+                if (!res.ok) throw new Error('Erro ao carregar ranking');
+
+                const leitores = await res.json();
+                const ranking = document.getElementById('ranking');
+                ranking.innerHTML = '';
+
+                leitores.forEach(leitor => {
+                    const nome = document.createElement('div');
+                    nome.textContent = leitor.nome;
+
+                    const pontos = document.createElement('div');
+                    pontos.textContent = leitor.livros_lidos;
+
+                    const classificacao = document.createElement('div');
+                    classificacao.textContent = leitor.classificacao;
+
+                    ranking.appendChild(nome);
+                    ranking.appendChild(pontos);
+                    ranking.appendChild(classificacao);
+                });
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        carregarRanking();
+
+  </script>
+</body>
+</html>
