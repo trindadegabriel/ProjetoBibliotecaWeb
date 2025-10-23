@@ -32,29 +32,3 @@ Acessar a aplicação:
 Para apagar o banco de dados e recriar automaticamente:
 
 - del biblioteca.db
-
-## Endpoints da APi
-
-- Alunos
-Método      Endpoint                Descrição
-
-POST	    /alunos	                    Cadastra um novo aluno
-GET	        /alunos	                    Lista todos os alunos
-GET	        /alunos/:id/pontuacao	    Retorna a pontuação e classificação do aluno
-
-- Livros
-Método	    Endpoint	                Descrição
-
-POST	    /livros	                    Cadastra um novo livro
-GET	        /livros/disponiveis	        Lista livros disponíveis
-
-- Empréstimos
-Método	    Endpoint	                Descrição
-
-POST	    /emprestimos	            Registra a retirada de um livro
-PUT	        /emprestimos/:id/devolucao	Registra a devolução de um livro
-
-- Relatórios
-Método	    Endpoint	                Descrição
-
-GET	        /relatorios/classificacao	Exibe ranking de leitores
