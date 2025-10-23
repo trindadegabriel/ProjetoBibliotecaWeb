@@ -17,18 +17,29 @@ function listarAlunos(req, res) {
 }
 
 function getPontuacao(req, res) {
-  const { id } = req.params;
-  db.get("SELECT pontos FROM alunos WHERE id = ?", [id], (err, row) => {
+  const { matricula } = req.params;
+
+  // Conta a quantidade de livros devolvidos nos últimos 6 meses
+  const query = `
+    SELECT COUNT(*) AS pontos
+    FROM emprestimos e
+    JOIN alunos a ON e.aluno_id = a.id
+    WHERE a.matricula = ?
+      AND e.data_devolucao IS NOT NULL
+      AND e.data_devolucao >= date('now', '-6 months')
+  `;
+
+  db.get(query, [matricula], (err, row) => {
     if (err) return res.status(500).json({ error: err.message });
-    if (!row) return res.status(404).json({ message: "Aluno não encontrado" });
+
+    const pontos = row.pontos || 0;
 
     let classificacao = "Iniciante";
-    const pontos = row.pontos || 0;
     if (pontos >= 6 && pontos <= 10) classificacao = "Regular";
     else if (pontos >= 11 && pontos <= 20) classificacao = "Ativo";
     else if (pontos > 20) classificacao = "Extremo";
 
-    res.json({ id, pontos, classificacao });
+    res.json({ matricula, pontos, classificacao });
   });
 }
 

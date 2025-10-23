@@ -21,8 +21,8 @@
     <div class="container">
       <h3>Consultar Pontuação</h3>
       <form id="formPontuacao">
-        <label for="idAluno">ID do Aluno:</label><br>
-        <input type="number" id="idAluno" name="idAluno" required><br><br>
+        <label for="matriculaAluno">Matrícula do Aluno:</label><br>
+        <input type="text" id="matriculaAluno" name="matriculaAluno" required><br><br>
         <button type="submit">Consultar</button>
       </form>
       <p id="resultado" class="pontuacao"></p>
@@ -34,19 +34,19 @@
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const id = document.getElementById('idAluno').value;
+      const matricula = document.getElementById('matriculaAluno').value;
       resultado.style.color = 'black';
       resultado.innerHTML = '<div>Carregando...</div>';
 
       try {
-        const res = await fetch(`http://localhost:3000/alunos/${id}/pontuacao`);
-        const dados = await res.json();
+        const res = await fetch(`http://localhost:3000/alunos/${matricula}/pontuacao`);
+        const dados = await res.json(); // ⚠️ importante para obter os dados da resposta
 
         if (res.ok) {
           resultado.innerHTML = `
-        <div><strong>Pontuação:</strong> ${dados.pontos}</div>
-        <div><strong>Classificação:</strong> ${dados.classificacao}</div>
-      `;
+            <div><strong>Pontuação:</strong> ${dados.pontos}</div>
+            <div><strong>Classificação:</strong> ${dados.classificacao}</div>
+          `;
         } else {
           resultado.innerHTML = `<div style="color:red;">${dados.error || 'Aluno não encontrado.'}</div>`;
         }
@@ -55,7 +55,6 @@
         console.error(err);
       }
     });
-
   </script>
 </body>
 

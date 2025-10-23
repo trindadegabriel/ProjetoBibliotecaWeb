@@ -19,7 +19,54 @@
     <div class="container">
       <h3>Bem-vindo ao sistema!</h3>
       <p>Escolha uma das opções no menu acima.</p>
+      <h3>------------------------------------------------</h3>
+      <h3>Livros em Empréstimo</h3>
+
+      <form id="formAluno">
+        <label for="matriculaAluno">Matrícula do Aluno:</label><br>
+        <input type="text" id="matriculaAluno" name="matriculaAluno" required>
+        <button type="submit">Consultar</button>
+      </form>
+      <div id="emprestimos" class="grid"></div>
+
     </div>
   </main>
+  <script>
+    const form = document.getElementById('formAluno');
+    const emprestimosDiv = document.getElementById('emprestimos');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const matricula = document.getElementById('matriculaAluno').value;
+      emprestimosDiv.innerHTML = '<p>Carregando...</p>';
+
+      try {
+        const res = await fetch(`http://localhost:3000/emprestimos/${matricula}`);
+        const emprestimos = await res.json();
+
+        if (!res.ok) throw new Error(emprestimos.error || 'Erro ao buscar empréstimos');
+
+        if (emprestimos.length === 0) {
+          emprestimosDiv.innerHTML = '<p>Nenhum livro emprestado no momento.</p>';
+          return;
+        }
+
+        emprestimosDiv.innerHTML = '';
+        emprestimos.forEach(item => {
+          const card = document.createElement('div');
+          card.classList.add('card');
+          card.innerHTML = `
+            <strong>ID Empréstimo:</strong> ${item.emprestimo_id}<br>
+            <strong>Título:</strong> ${item.titulo}<br>
+            <strong>Autor:</strong> ${item.autor}<br>
+            <strong>Data de Retirada:</strong> ${item.data_retirada || '-'}
+          `;
+          emprestimosDiv.appendChild(card);
+        });
+      } catch (err) {
+        emprestimosDiv.innerHTML = `<p style="color:red;">${err.message}</p>`;
+      }
+    });
+  </script>
 </body>
 </html>

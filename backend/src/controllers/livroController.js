@@ -9,11 +9,11 @@ function cadastrarLivro(req, res) {
   });
 }
 
-function listarDisponiveis(req, res) {
-  db.all("SELECT * FROM livros WHERE disponivel = 'S'", [], (err, rows) => {
+function listarLivros(req, res) {
+  db.all("SELECT * FROM livros", [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
 }
 
-module.exports = { cadastrarLivro, listarDisponiveis };
+module.exports = { cadastrarLivro, listarLivros };

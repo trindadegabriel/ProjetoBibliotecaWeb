@@ -17,8 +17,8 @@
   <main>
     <div class="container">
       <form id="formRetirada">
-        <label for="aluno_id">ID do Aluno:</label><br>
-        <input type="number" id="aluno_id" name="aluno_id" required><br><br>
+        <label for="matriculaAluno">Matrícula do Aluno:</label><br>
+        <input type="text" id="matriculaAluno" name="matriculaAluno" required><br><br>
 
         <label for="livro_id">ID do Livro:</label><br>
         <input type="number" id="livro_id" name="livro_id" required><br><br>
@@ -34,7 +34,7 @@
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const aluno_id = document.getElementById('aluno_id').value;
+      const matricula = document.getElementById('matriculaAluno').value;
       const livro_id = document.getElementById('livro_id').value;
 
       mensagem.textContent = 'Registrando...';
@@ -44,7 +44,7 @@
         const res = await fetch('http://localhost:3000/emprestimos', {
           method: 'POST',
           headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({aluno_id, livro_id})
+          body: JSON.stringify({matricula, livro_id})
         });
 
         const data = await res.json();

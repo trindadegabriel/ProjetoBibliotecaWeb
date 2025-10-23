@@ -27,7 +27,7 @@
   <script>
     async function carregarLivros() {
         try {
-            const res = await fetch('http://localhost:3000/livros/disponiveis');
+            const res = await fetch('http://localhost:3000/livros/cadastrados');
             if (!res.ok) throw new Error('Erro ao carregar livros');
 
             const livros = await res.json();

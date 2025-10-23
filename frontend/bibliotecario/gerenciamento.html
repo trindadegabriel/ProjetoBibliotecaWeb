@@ -28,13 +28,26 @@
         <div class="grid-header">Status</div>
         <div id="listaLivros" class="grid-body"></div>
       </div>
+
+      <h3 class="titulo-emprestimos">Histórico de Empréstimos/Devoluções</h3>
+      
+      <div class="grid-emprestimos">
+        <div class="grid-header">ID Empréstimo</div>
+        <div class="grid-header">Aluno</div>
+        <div class="grid-header">Livro</div>
+        <div class="grid-header">Data de Retirada</div>
+        <div class="grid-header">Data de Devolução</div>
+        <div class="grid-header">Status</div>
+
+        <div id="listaEmprestimos" class="grid-body"></div>
+      </div>
     </div>
   </main>
 
 <script>
     async function carregarLivros() {
         try {
-            const res = await fetch('http://localhost:3000/livros/disponiveis');
+            const res = await fetch('http://localhost:3000/livros/cadastrados');
             if (!res.ok) throw new Error('Erro ao carregar livros');
 
             const livros = await res.json();
@@ -67,6 +80,53 @@
     }
 
     carregarLivros();
+
+    async function carregarEmprestimos() {
+        try {
+          const res = await fetch('http://localhost:3000/emprestimos/todos');
+          if (!res.ok) throw new Error('Erro ao carregar empréstimos');
+
+          const emprestimos = await res.json();
+          const lista = document.getElementById('listaEmprestimos');
+          lista.innerHTML = '';
+
+          emprestimos.forEach(e => {
+            const row = document.createElement('div');
+            row.classList.add('grid-row');
+
+            const id = document.createElement('div');
+            id.textContent = e.emprestimo_id;
+            row.appendChild(id);
+
+            const aluno = document.createElement('div');
+            aluno.textContent = e.nome_aluno || 'Desconhecido';
+            row.appendChild(aluno);
+
+            const livro = document.createElement('div');
+            livro.textContent = e.livro_titulo || 'Livro não informado';
+            row.appendChild(livro);
+
+            const retirada = document.createElement('div');
+            retirada.textContent = e.data_retirada || '-';
+            row.appendChild(retirada);
+
+            const devolucao = document.createElement('div');
+            devolucao.textContent = e.data_devolucao || '-';
+            row.appendChild(devolucao);
+
+            const status = document.createElement('div');
+            status.textContent = e.data_devolucao ? 'Devolvido' : 'Emprestado';
+            row.appendChild(status);
+
+            lista.appendChild(row);
+          });
+
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      carregarEmprestimos();
 </script>
 </body>
 </html>
