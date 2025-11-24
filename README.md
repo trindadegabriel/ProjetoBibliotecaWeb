@@ -9,7 +9,7 @@ Permite cadastrar alunos e livros, registrar empréstimos e devoluções, e visu
 
 - Node.js  
 - Express  
-- SQLite3  
+- Postgre  
 - Nodemon (ambiente de desenvolvimento)  
 
 ## Pré-requisitos
@@ -28,7 +28,3 @@ Rodar o servidor:
 
 Acessar a aplicação:
 - http://localhost:3000
-
-Para apagar o banco de dados e recriar automaticamente:
-
-- del biblioteca.db
