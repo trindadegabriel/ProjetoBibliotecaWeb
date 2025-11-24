@@ -1,77 +1,102 @@
-const db = require("../config/db");
+const pool = require("../config/db");
 
-//Função para registrar retirada de livro
-// No seu emprestimoController.js
-function retirarLivro(req, res) {
+async function retirarLivro(req, res) {
   const { matricula, livro_id } = req.body;
 
-  // Passo 1: buscar aluno pelo matrícula
-  db.get("SELECT id FROM alunos WHERE matricula = ?", [matricula], (err, aluno) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (!aluno) return res.status(404).json({ message: "Aluno não encontrado" });
+  try {
+    //Buscar aluno
+    const alunoResult = await pool.query(
+      "SELECT id FROM alunos WHERE matricula = $1",
+      [matricula]
+    );
 
-    const aluno_id = aluno.id;
+    if (alunoResult.rowCount === 0)
+      return res.status(404).json({ message: "Aluno não encontrado" });
 
-    // Passo 2: verificar se o livro está disponível
-    db.get("SELECT disponivel FROM livros WHERE id = ?", [livro_id], (err, livro) => {
-      if (err) return res.status(500).json({ error: err.message });
-      if (!livro) return res.status(404).json({ message: "Livro não encontrado" });
-      if (livro.disponivel === 'N') return res.status(400).json({ message: "Livro não disponível" });
+    const aluno_id = alunoResult.rows[0].id;
 
-      // Passo 3: inserir empréstimo
-      const sqlEmprestimo = `
-        INSERT INTO emprestimos (aluno_id, livro_id, data_retirada)
-        VALUES (?, ?, datetime('now'))
-      `;
-      db.run(sqlEmprestimo, [aluno_id, livro_id], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
+    //Verificar disponibilidade do livro
+    const livroResult = await pool.query(
+      "SELECT disponivel FROM livros WHERE id = $1",
+      [livro_id]
+    );
 
-        // Passo 4: atualizar livro para indisponível
-        db.run("UPDATE livros SET disponivel = 'N' WHERE id = ?", [livro_id], (err) => {
-          if (err) return res.status(500).json({ error: err.message });
+    if (livroResult.rowCount === 0)
+      return res.status(404).json({ message: "Livro não encontrado" });
 
-          res.status(201).json({ 
-            message: "Empréstimo registrado com sucesso!", 
-            emprestimo_id: this.lastID 
-          });
-        });
-      });
+    if (livroResult.rows[0].disponivel === "N")
+      return res.status(400).json({ message: "Livro não disponível" });
+
+    // Registrar empréstimo
+    const emprestimoResult = await pool.query(
+      `
+      INSERT INTO emprestimos (aluno_id, livro_id, data_retirada)
+      VALUES ($1, $2, NOW())
+      RETURNING id;
+      `,
+      [aluno_id, livro_id]
+    );
+
+    //Atualizar livro para indisponível
+    await pool.query(
+      "UPDATE livros SET disponivel = 'N' WHERE id = $1",
+      [livro_id]
+    );
+
+    res.status(201).json({
+      message: "Empréstimo registrado com sucesso!",
+      emprestimo_id: emprestimoResult.rows[0].id,
     });
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 }
 
-//Função para registrar devolução de livro
-function devolverLivro(req, res) {
+//Registrar devolução de livro
+async function devolverLivro(req, res) {
   const { id } = req.params;
 
-  //Busca o empréstimo
-  db.get("SELECT livro_id, aluno_id, data_devolucao FROM emprestimos WHERE id = ?", [id], (err, row) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (!row) return res.status(404).json({ message: "Empréstimo não encontrado" });
-    if (row.data_devolucao) return res.status(400).json({ message: "Livro já devolvido" });
+  try {
+    //Buscar empréstimo
+    const emprestimoResult = await pool.query(
+      "SELECT livro_id, aluno_id, data_devolucao FROM emprestimos WHERE id = $1",
+      [id]
+    );
 
-    const { livro_id, aluno_id } = row;
+    if (emprestimoResult.rowCount === 0)
+      return res.status(404).json({ message: "Empréstimo não encontrado" });
 
-    //Atualiza a data de devolução
-    db.run("UPDATE emprestimos SET data_devolucao = datetime('now') WHERE id = ?", [id], function(err) {
-      if (err) return res.status(500).json({ error: err.message });
+    const { livro_id, aluno_id, data_devolucao } = emprestimoResult.rows[0];
 
-      //Atualiza o livro para disponível
-      db.run("UPDATE livros SET disponivel = 'S' WHERE id = ?", [livro_id], (err) => {
-        if (err) return res.status(500).json({ error: err.message });
+    if (data_devolucao)
+      return res.status(400).json({ message: "Livro já devolvido" });
 
-        //Incrementa pontuação do aluno
-        db.run("UPDATE alunos SET pontos = pontos + 1 WHERE id = ?", [aluno_id], (err) => {
-          if (err) return res.status(500).json({ error: err.message });
+    //Atualizar data de devolução
+    await pool.query(
+      "UPDATE emprestimos SET data_devolucao = NOW() WHERE id = $1",
+      [id]
+    );
 
-          res.json({ message: "Devolução registrada e pontuação atualizada!" });
-        });
-      });
-    });
-  });
+    //Tornar livro disponível
+    await pool.query(
+      "UPDATE livros SET disponivel = 'S' WHERE id = $1",
+      [livro_id]
+    );
+
+    //Atualizar pontuação
+    await pool.query(
+      "UPDATE alunos SET pontos = pontos + 1 WHERE id = $1",
+      [aluno_id]
+    );
+
+    res.json({ message: "Devolução registrada e pontuação atualizada!" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 }
 
-function listarEmprestimosPorAluno(req, res) {
+//Listar empréstimos em aberto por aluno
+async function listarEmprestimosPorAluno(req, res) {
   const matricula = req.params.matricula || req.query.matricula;
   if (!matricula) return res.status(400).json({ error: "Matrícula não informada" });
 
@@ -85,17 +110,20 @@ function listarEmprestimosPorAluno(req, res) {
     FROM emprestimos e
     JOIN livros l ON e.livro_id = l.id
     JOIN alunos a ON e.aluno_id = a.id
-    WHERE a.matricula = ? 
+    WHERE a.matricula = $1
       AND e.data_devolucao IS NULL
   `;
 
-  db.all(query, [matricula.toString()], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
-  });
+  try {
+    const result = await pool.query(query, [matricula]);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 }
 
-function listarTodosEmprestimos(req, res) {
+//Listar todos os empréstimos
+async function listarTodosEmprestimos(req, res) {
   const sql = `
     SELECT 
       e.id AS emprestimo_id,
@@ -115,14 +143,12 @@ function listarTodosEmprestimos(req, res) {
     ORDER BY e.data_retirada DESC
   `;
 
-  db.all(sql, [], (err, rows) => {
-    if (err) {
-      console.error("Erro ao buscar empréstimos:", err.message);
-      return res.status(500).json({ error: err.message });
-    }
-    res.json(rows);
-  });
+  try {
+    const result = await pool.query(sql);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 }
-
 
 module.exports = { retirarLivro, devolverLivro, listarEmprestimosPorAluno, listarTodosEmprestimos };

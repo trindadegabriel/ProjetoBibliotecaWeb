@@ -40,7 +40,7 @@
 
       try {
         const res = await fetch(`http://localhost:3000/alunos/${matricula}/pontuacao`);
-        const dados = await res.json(); // ⚠️ importante para obter os dados da resposta
+        const dados = await res.json(); //importante para obter os dados da resposta
 
         if (res.ok) {
           resultado.innerHTML = `

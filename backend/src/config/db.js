@@ -1,45 +1,53 @@
-const sqlite3 = require("sqlite3").verbose();
+const { Pool } = require("pg");
+const dotenv = require("dotenv");
+dotenv.config();
 
-const db = new sqlite3.Database("./biblioteca.db", (err) => {
-  if (err) {
-    console.error("Erro ao conectar ao banco SQLite:", err.message);
-  } else {
-    console.log("Conectado ao banco SQLite!");
+// Conexão com o Postgres
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+pool.connect()
+  .then(() => console.log("Conectado ao PostgreSQL!"))
+  .catch(err => console.error("Erro ao conectar ao PostgreSQL:", err.message));
+
+const createTables = async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS alunos (
+        id SERIAL PRIMARY KEY,
+        nome VARCHAR(255) NOT NULL,
+        matricula VARCHAR(255) UNIQUE NOT NULL,
+        data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        pontos INTEGER DEFAULT 0
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS livros (
+        id SERIAL PRIMARY KEY,
+        titulo VARCHAR(255) NOT NULL,
+        autor VARCHAR(255),
+        disponivel CHAR(1) DEFAULT 'S'
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS emprestimos (
+        id SERIAL PRIMARY KEY,
+        aluno_id INTEGER REFERENCES alunos(id),
+        livro_id INTEGER REFERENCES livros(id),
+        data_retirada TIMESTAMP,
+        data_devolucao TIMESTAMP
+      );
+    `);
+
+    console.log("Tabelas verificadas e criadas com sucesso!");
+  } catch (err) {
+    console.error("Erro ao criar tabelas:", err.message);
   }
-});
+};
 
-// Criação automática das tabelas
-db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS alunos (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      nome TEXT NOT NULL,
-      matricula TEXT UNIQUE NOT NULL,
-      data_cadastro TEXT DEFAULT CURRENT_TIMESTAMP,
-      pontos INTEGER DEFAULT 0
-    )
-  `);
+createTables();
 
-  db.run(`
-    CREATE TABLE IF NOT EXISTS livros (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      titulo TEXT NOT NULL,
-      autor TEXT,
-      disponivel TEXT DEFAULT 'S'
-    )
-  `);
-
-  db.run(`
-    CREATE TABLE IF NOT EXISTS emprestimos (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      aluno_id INTEGER,
-      livro_id INTEGER,
-      data_retirada TEXT,
-      data_devolucao TEXT,
-      FOREIGN KEY (aluno_id) REFERENCES alunos(id),
-      FOREIGN KEY (livro_id) REFERENCES livros(id)
-    )
-  `);
-});
-
-module.exports = db;
+module.exports = pool;
