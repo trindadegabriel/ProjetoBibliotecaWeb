@@ -9,7 +9,7 @@ Permite cadastrar alunos e livros, registrar empréstimos e devoluções, e visu
 
 - Node.js  
 - Express  
-- Postgre  
+- PostgreSQL
 - Nodemon (ambiente de desenvolvimento)  
 
 ## Pré-requisitos
