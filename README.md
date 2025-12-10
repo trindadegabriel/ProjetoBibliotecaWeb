@@ -10,13 +10,15 @@ Permite cadastrar alunos e livros, registrar empréstimos e devoluções, e visu
 - Node.js  
 - Express  
 - PostgreSQL
-- Nodemon (ambiente de desenvolvimento)  
+- PgAdmin
 
 ## Pré-requisitos
 
 Antes de começar, você precisa ter instalado:
 - [Node.js](https://nodejs.org/) (versão 16 ou superior)
 - Git (para clonar o repositório)
+- PostgreSQL
+- PgAdmin
 
 ## Passos para rodar o projeto localmente
 
